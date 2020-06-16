@@ -3,7 +3,7 @@ erver:
     apiurl:         https://blocky.apache.org/blocky-public
 
 client:
-    uploadinterval: 180
+    uploadinterval: 300
     interval:       120
 
 iptables:
