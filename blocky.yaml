@@ -1,4 +1,4 @@
-erver:
+server:
     wshost:         wss://blocky-master.apache.org:3456/
     apiurl:         https://blocky.apache.org/blocky-public
 
