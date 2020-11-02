@@ -374,7 +374,7 @@ async def hello(epoch):
             print("[%u] Server disconnected, reconnecting in 30 seconds" % time.time())
             time.sleep(30)
         except Exception as e:
-            print("[%u] Connection failed (%s), reconnecting in 30 seconds" % (e, time.time()))
+            print("[%u] Connection failed (%s), reconnecting in 30 seconds" % (time.time(), e))
             time.sleep(30)
 
 
