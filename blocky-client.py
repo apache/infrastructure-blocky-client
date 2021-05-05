@@ -37,8 +37,9 @@ print = asfpy.syslog.Printer(stdout=True, identity='blocky')
 DEBUG = False
 CONFIG = None
 MAX_IPTABLES_TRIES = 10
-IPTABLES_EXEC = '/sbin/iptables'
-IP6TABLES_EXEC = '/sbin/ip6tables'
+ENV_EXEC = '/usr/bin/env'
+IPTABLES_EXEC = 'iptables'
+IP6TABLES_EXEC = 'ip6tables'
 LAST_UPLOAD = 0
 UPLOAD_FREQUENCY = 180
 
@@ -169,7 +170,7 @@ def getbans(chain='INPUT'):
     for i in range(0, MAX_IPTABLES_TRIES):
         out = None
         try:
-            out = subprocess.check_output([IPTABLES_EXEC, '--list', chain, '-n', '--line-numbers'],
+            out = subprocess.check_output([ENV_EXEC, IPTABLES_EXEC, '--list', chain, '-n', '--line-numbers'],
                                           stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
             if 'you must be root' in str(err.output) or 'Permission denied' in str(err.output):
@@ -211,7 +212,7 @@ def getbans(chain='INPUT'):
         return banlist
     for i in range(0, MAX_IPTABLES_TRIES):
         try:
-            out = subprocess.check_output([IP6TABLES_EXEC, '--list', chain, '-n', '--line-numbers'],
+            out = subprocess.check_output([ENV_EXEC, IP6TABLES_EXEC, '--list', chain, '-n', '--line-numbers'],
                                           stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
             if 'you must be root' in str(err.output):
@@ -258,6 +259,7 @@ def iptables(ip, action):
         if ':' in ip:
             exe = IP6TABLES_EXEC
         subprocess.check_call([
+            ENV_EXEC,
             exe,
             action, "INPUT",
             "-s", ip,
@@ -294,6 +296,7 @@ def unban_line(ip, linenumber, chain='INPUT'):
         return True
     try:
         subprocess.check_call([
+            ENV_EXEC,
             exe,
             '-D', chain, linenumber
         ], stderr=open(os.devnull, 'wb'))
