@@ -172,7 +172,7 @@ class Chain:
                         extensions = m.group(6)
 
                         entry = Entry(
-                            self.chain, line_number, action, protocol, option, source, destination, extensions
+                            self.chain, line_number, action, protocol, None, source, destination, extensions
                         )
 
                         chain_list.append(entry)
@@ -264,8 +264,8 @@ async def iptables(chain, ip, action, message="Blocked by Blocky/4"):
         return False
     return True
 
-  
 # Tests go below:
+
 
 async def test():
     """Test! fetch all entries in INPUT chain and print them"""
