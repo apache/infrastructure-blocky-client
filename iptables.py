@@ -22,11 +22,12 @@ import re
 import os
 import netaddr
 import typing
+import shutil
 
 MAX_IPTABLES_TRIES = 10  # If we can't get iptables to unlock after 10 retries, it's hosed. Give up
 ENV_EXEC = "/usr/bin/env"
-IPTABLES_EXEC = "iptables"
-IP6TABLES_EXEC = "ip6tables"
+IPTABLES_EXEC = shutil.which("iptables")
+IP6TABLES_EXEC = shutil.which("ip6tables")
 
 
 class Entry:
@@ -147,6 +148,7 @@ class Chain:
                 )
                 stdout, stderr = await proc.communicate()
                 assert proc.returncode == 0, stderr
+                out = stdout
             except AssertionError as err:
                 if "you must be root" in str(err):
                     print(
