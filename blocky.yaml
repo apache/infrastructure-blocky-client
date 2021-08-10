@@ -1,3 +1,4 @@
+# Blocky/3 configuration #
 server:
     wshost:         wss://blocky-master.apache.org:3456/
     apiurl:         https://blocky.apache.org/blocky-public
@@ -14,3 +15,16 @@ iptables:
         - fail2ban-ssh
         - fail2ban-httpd-svn
         - fail2ban-ssh-ddos
+
+
+# Blocky/4 configuration #
+api_host:         https://blocky.apache.org/api/
+pubsub_host:      https://pubsub.apache.org:2070/
+update_interval:  300
+chains:
+    - INPUT
+    - fail2ban-default
+    - fail2ban-aardvark
+    - fail2ban-ssh
+    - fail2ban-httpd-svn
+    - fail2ban-ssh-ddos
