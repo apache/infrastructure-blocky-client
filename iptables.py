@@ -131,52 +131,50 @@ class Chain:
                         chain_list.append(entry)
                 break
         # Get IPv6 list
-        if not os.path.exists(IP6TABLES_EXEC):
-            self.items = chain_list
-            return chain_list
-        for i in range(0, MAX_IPTABLES_TRIES):
-            try:
-                proc = await asyncio.subprocess.create_subprocess_exec(
-                    ENV_EXEC,
-                    IP6TABLES_EXEC,
-                    "--list",
-                    self.chain,
-                    "-n",
-                    "--line-numbers",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                stdout, stderr = await proc.communicate()
-                assert proc.returncode == 0, stderr
-                out = stdout
-            except AssertionError as err:
-                if "you must be root" in str(err):
-                    print(
-                        "Looks like blocky doesn't have permission to access ip6tables, giving up completely! (are you "
-                        "running as root?)"
+        if IP6TABLES_EXEC:
+            for i in range(0, MAX_IPTABLES_TRIES):
+                try:
+                    proc = await asyncio.subprocess.create_subprocess_exec(
+                        ENV_EXEC,
+                        IP6TABLES_EXEC,
+                        "--list",
+                        self.chain,
+                        "-n",
+                        "--line-numbers",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
                     )
-                    sys.exit(-1)
-                if "No chain/target/match" in str(err):
-                    continue
-                asyncio.sleep(1)  # write lock, probably
-            if out:
-                for line in out.decode("ascii").split("\n"):
-                    # Unlike ipv4 iptables, the 'option' thing is blank here, so omit it
-                    m = re.match(r"^(\d+)\s+([A-Z]+)\s+(all|tcp|udp)\s+([0-9a-f.:/]+)\s+([0-9a-f.:/]+)\s*(.*?)$", line)
-                    if m:
-                        line_number = m.group(1)
-                        action = m.group(2)
-                        protocol = m.group(3)
-                        source = m.group(4)
-                        destination = m.group(5)
-                        extensions = m.group(6)
-
-                        entry = Entry(
-                            self.chain, line_number, action, protocol, None, source, destination, extensions
+                    stdout, stderr = await proc.communicate()
+                    assert proc.returncode == 0, stderr
+                    out = stdout
+                except AssertionError as err:
+                    if "you must be root" in str(err):
+                        print(
+                            "Looks like blocky doesn't have permission to access ip6tables, giving up completely! (are you "
+                            "running as root?)"
                         )
+                        sys.exit(-1)
+                    if "No chain/target/match" in str(err):
+                        continue
+                    asyncio.sleep(1)  # write lock, probably
+                if out:
+                    for line in out.decode("ascii").split("\n"):
+                        # Unlike ipv4 iptables, the 'option' thing is blank here, so omit it
+                        m = re.match(r"^(\d+)\s+([A-Z]+)\s+(all|tcp|udp)\s+([0-9a-f.:/]+)\s+([0-9a-f.:/]+)\s*(.*?)$", line)
+                        if m:
+                            line_number = m.group(1)
+                            action = m.group(2)
+                            protocol = m.group(3)
+                            source = m.group(4)
+                            destination = m.group(5)
+                            extensions = m.group(6)
 
-                        chain_list.append(entry)
-                break
+                            entry = Entry(
+                                self.chain, line_number, action, protocol, None, source, destination, extensions
+                            )
+
+                            chain_list.append(entry)
+                    break
         self.items = chain_list
 
     async def add(self, ip, reason="No reason given"):
