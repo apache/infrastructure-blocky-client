@@ -268,8 +268,8 @@ async def iptables(chain, ip, action, message="Blocked by Blocky/4"):
 async def test():
     """Test! fetch all entries in INPUT chain and print them"""
     my_chain = Chain("INPUT")
-    simple_list = await my_chain.refresh()
-    for entry in simple_list:
+    await my_chain.refresh()
+    for entry in my_chain.items:
         print(entry)
 
 
