@@ -19,7 +19,6 @@
 import asyncio
 import sys
 import re
-import os
 import netaddr
 import typing
 import shutil
