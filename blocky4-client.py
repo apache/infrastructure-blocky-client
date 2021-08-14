@@ -145,7 +145,7 @@ async def loop(config):
                 await process_changes(chains, allow=js["allow"], block=js["block"])
 
                 # Attach to pubsub and listen for new blocks/allows
-                async with session.get(config["pubsub_host"]) as pubsub_conn:
+                async with session.get(config["pubsub_host"], timeout=None) as pubsub_conn:
                     async for chunk in pubsub_conn.content.iter_any():
                         chunk = chunk.decode("utf-8").strip()
                         try:
@@ -160,7 +160,7 @@ async def loop(config):
                     if last_upload + config.get("upload_interval", 300) < time.time():
                         await upload_iptables(config, chains)
             except Exception as e:
-                print("[%u] Connection failed (%s), reconnecting in 30 seconds" % (time.time(), e))
+                print("[%u] Connection failed (%s: %s), reconnecting in 30 seconds" % (time.time(), type(e), e))
                 await asyncio.sleep(30)
 
 
