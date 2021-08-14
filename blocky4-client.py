@@ -61,7 +61,7 @@ def find_block(chains, ip):
     return None, None
 
 
-async def process_changes(chains, allow=None, block=None):
+async def process_changes(chains, allow=[], block=[]):
     """Process allows and blocks"""
     allow_blocks = []
     if allow or block:
@@ -148,12 +148,15 @@ async def loop(config):
                 async with session.get(config["pubsub_host"]) as pubsub_conn:
                     async for chunk in pubsub_conn.content.iter_any():
                         chunk = chunk.decode("utf-8").strip()
-                        payload = json.loads(chunk)
-                        if "blocky" in payload.get("pubsub_topics", []):
-                            if "block" in payload:
-                                process_changes(chains, block=[payload["block"]])
-                            elif "allow" in payload:
-                                process_changes(chains, allow=[payload["allow"]])
+                        try:
+                            payload = json.loads(chunk)
+                            if "blocky" in payload.get("pubsub_topics", []):
+                                if "block" in payload:
+                                    await process_changes(chains, block=[payload["block"]])
+                                elif "allow" in payload:
+                                    await process_changes(chains, allow=[payload["allow"]])
+                        except json.JSONDecodeError:
+                            pass  # Got something borky, ignore
                     if last_upload + config.get("upload_interval", 300) < time.time():
                         await upload_iptables(config, chains)
             except Exception as e:
