@@ -33,6 +33,7 @@ async def upload_iptables(config, chains):
     # Turn all rules in all chains into dicts, add to a big list
     rules_as_dict = []
     for chain in chains:
+        await chain.refresh()
         for rule in chain.items:
             rules_as_dict.append(rule.to_dict())
     print("Uploading iptables list (%u entries) to Blocky server" % len(rules_as_dict))
