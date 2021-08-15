@@ -36,7 +36,7 @@ async def upload_iptables(config, chains):
         await chain.refresh()
         for rule in chain.items:
             rules_as_dict.append(rule.to_dict())
-    print("Uploading iptables list (%u entries) to Blocky server" % len(rules_as_dict))
+    #  print("Uploading iptables list (%u entries) to Blocky server" % len(rules_as_dict))
     try:
         js = {"hostname": config["whoami"], "iptables": rules_as_dict}
         timeout = aiohttp.ClientTimeout(total=15)
@@ -44,7 +44,7 @@ async def upload_iptables(config, chains):
         async with aiohttp.request("PUT", api_url, json=js, timeout=timeout) as resp:
             response = await resp.json()
             assert resp.status == 200, f"{resp.status}: {resp.reason}"
-            print(response)
+            #  print(response)
     except AssertionError as status:
         print(f"Server responded with code {status}")
     except aiohttp.ClientConnectorError as e:
