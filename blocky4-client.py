@@ -133,8 +133,7 @@ async def loop(config):
         await chain.refresh()
         chains.append(chain)
 
-    await upload_iptables(config, chains)
-    last_upload = time.time()
+    last_upload = 0
 
     while True:
         async with aiohttp.ClientSession() as session:
@@ -148,17 +147,20 @@ async def loop(config):
                 async with session.get(config["pubsub_host"], timeout=None) as pubsub_conn:
                     async for chunk in pubsub_conn.content.iter_any():
                         chunk = chunk.decode("utf-8").strip()
-                        try:
-                            payload = json.loads(chunk)
-                            if "blocky" in payload.get("pubsub_topics", []):
-                                if "block" in payload:
-                                    await process_changes(chains, block=[payload["block"]])
-                                elif "allow" in payload:
-                                    await process_changes(chains, allow=[payload["allow"]])
-                        except json.JSONDecodeError:
-                            pass  # Got something borky, ignore
-                    if last_upload + config.get("upload_interval", 300) < time.time():
-                        await upload_iptables(config, chains)
+                        for line in chunk.split("\n"):
+                            if line:
+                                try:
+                                    payload = json.loads(line)
+                                    if "blocky" in payload.get("pubsub_topics", []):
+                                        if "block" in payload:
+                                            await process_changes(chains, block=[payload["block"]])
+                                        elif "allow" in payload:
+                                            await process_changes(chains, allow=[payload["allow"]])
+                                except json.JSONDecodeError as e:
+                                    print(e)
+                        if last_upload + config.get("upload_interval", 300) < time.time():
+                            await upload_iptables(config, chains)
+                            last_upload = time.time()
             except Exception as e:
                 print("[%u] Connection failed (%s: %s), reconnecting in 30 seconds" % (time.time(), type(e), e))
                 await asyncio.sleep(30)
