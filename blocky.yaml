@@ -18,7 +18,7 @@ iptables:
 
 
 # Blocky/4 configuration #
-api_host:         https://blocky.apache.org/api/
+api_host:         https://blocky-he-de.apache.org/
 pubsub_host:      https://pubsub.apache.org:2070/
 update_interval:  300
 chains:
