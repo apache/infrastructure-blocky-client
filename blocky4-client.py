@@ -25,6 +25,10 @@ import asfpy.whoami
 import aiohttp
 import json
 
+MAX_BLOCK_SIZE_IPV4 = (2 ** 16)  # Max a /16 block in IPv4 space (32 - 16 == /16)
+MAX_BLOCK_SIZE_IPV6 = (2 ** 72)  # Max a /56 block in IPv6 space (128 - 72 == /56)
+
+
 # Redirect print to asfpy's syslog printer, duplicate to stdout
 print = asfpy.syslog.Printer(stdout=True, identity="blocky")
 
@@ -103,8 +107,8 @@ async def process_changes(chains, allow=[], block=[]):
             if "/" in ip:
                 as_block = netaddr.IPNetwork(ip)
                 # We never ban larger than a /8 on ipv4 and /56 on ipv6
-                if (as_block.version == 4 and as_block.size > (2 ** 24)) or (
-                    as_block.version == 6 and as_block.size > (2 ^ 72)
+                if (as_block.version == 4 and as_block.size > MAX_BLOCK_SIZE_IPV4) or (
+                    as_block.version == 6 and as_block.size > MAX_BLOCK_SIZE_IPV6
                 ):
                     print("%s was requested banned but the net block is too large (%u IPs)" % (as_block, as_block.size))
                     continue
