@@ -122,7 +122,8 @@ class Chain:
                         source = m.group(5)
                         destination = m.group(6)
                         extensions = m.group(7)
-
+                        if action and action != "DROP":   # We only want drops
+                            continue
                         entry = Entry(
                             self.chain, line_number, action, protocol, option, source, destination, extensions
                         )
@@ -167,7 +168,8 @@ class Chain:
                             source = m.group(4)
                             destination = m.group(5)
                             extensions = m.group(6)
-
+                            if action and action != "DROP":   # We only want drops
+                                continue
                             entry = Entry(
                                 self.chain, line_number, action, protocol, None, source, destination, extensions
                             )
