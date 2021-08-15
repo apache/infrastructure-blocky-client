@@ -68,6 +68,9 @@ async def process_changes(chains, allow=[], block=[]):
         print("Processing upstream change-set (%u entries)" % (len(allow) + len(block)))
     processed = 0
     # First process any new allows
+    if allow and chains:  # If we have an INPUT default chain, refresh before unblock.
+        await chains[0].refresh()
+
     for entry in allow:
         ip = entry["ip"]
         if ip:
@@ -145,12 +148,15 @@ async def loop(config):
 
                 # Attach to pubsub and listen for new blocks/allows
                 async with session.get(config["pubsub_host"], timeout=None) as pubsub_conn:
-                    async for chunk in pubsub_conn.content.iter_any():
-                        chunk = chunk.decode("utf-8").strip()
-                        for line in chunk.split("\n"):
-                            if line:
+                    buffer = b""
+                    async for data, end_of_http_chunk in pubsub_conn.content.iter_chunks():
+                        buffer += data
+                        if end_of_http_chunk:
+                            chunk = buffer.decode("utf-8").strip()
+                            buffer = b""
+                            if chunk:
                                 try:
-                                    payload = json.loads(line)
+                                    payload = json.loads(chunk)
                                     if "blocky" in payload.get("pubsub_topics", []):
                                         if "block" in payload:
                                             await process_changes(chains, block=[payload["block"]])
