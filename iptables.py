@@ -156,7 +156,7 @@ class Chain:
                         sys.exit(-1)
                     if "No chain/target/match" in str(err):
                         continue
-                    asyncio.sleep(1)  # write lock, probably
+                    await asyncio.sleep(1)  # write lock, probably
                 if out:
                     for line in out.decode("ascii").split("\n"):
                         # Unlike ipv4 iptables, the 'option' thing is blank here, so omit it
