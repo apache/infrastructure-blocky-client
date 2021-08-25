@@ -66,7 +66,7 @@ def find_block(chains, ip):
     return None, None
 
 
-async def process_changes(chains, allow=[], block=[]):
+async def process_changes(config, chains, allow=[], block=[]):
     """Process allows and blocks"""
     allow_blocks = []
     if allow or block:
@@ -103,6 +103,9 @@ async def process_changes(chains, allow=[], block=[]):
             processed += 1
             if (processed % 500) == 0:
                 print("Processed %u entries..." % processed)
+            # Only apply blocks if host is * or our specific name
+            if entry.get('host', '*') not in [config['whoami'], '*']:
+                continue
             banit = True
             if "/" in ip:
                 as_block = netaddr.IPNetwork(ip)
@@ -149,7 +152,7 @@ async def loop(config):
                 rv = await session.get(f"{uri}/all")
                 assert rv.status == 200, f"API host responded with bad status: {rv.status}"
                 js = await rv.json()
-                await process_changes(chains, allow=js["allow"], block=js["block"])
+                await process_changes(config, chains, allow=js["allow"], block=js["block"])
 
                 # Attach to pubsub and listen for new blocks/allows
                 async with session.get(config["pubsub_host"], timeout=None) as pubsub_conn:
@@ -164,9 +167,9 @@ async def loop(config):
                                     payload = json.loads(chunk)
                                     if "blocky" in payload.get("pubsub_topics", []):
                                         if "block" in payload:
-                                            await process_changes(chains, block=[payload["block"]])
+                                            await process_changes(config, chains, block=[payload["block"]])
                                         elif "allow" in payload:
-                                            await process_changes(chains, allow=[payload["allow"]])
+                                            await process_changes(config, chains, allow=[payload["allow"]])
                                 except json.JSONDecodeError as e:
                                     print(e)
                         if last_upload + config.get("upload_interval", 300) < time.time():
