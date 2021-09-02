@@ -112,7 +112,7 @@ class Chain:
             if out:
                 for line in out.decode("ascii").split("\n"):
                     m = re.match(
-                        r"^(\d+)\s+([A-Z]+)\s+(all|tcp|udp)\s+(\S+)\s+([0-9a-f.:/]+)\s+([0-9a-f.:/]+)\s*(.*?)$", line
+                        r"^(\d+)\s+([-0-9a-zA-Z]+)\s+(all|tcp|udp)\s+(\S+)\s+([0-9a-f.:/]+)\s+([0-9a-f.:/]+)\s*(.*?)$", line
                     )
                     if m:
                         line_number = m.group(1)
@@ -122,7 +122,7 @@ class Chain:
                         source = m.group(5)
                         destination = m.group(6)
                         extensions = m.group(7)
-                        if action and action != "DROP":   # We only want drops
+                        if action and action not in ["DROP", "REJECT"]:   # We only want drops and rejects
                             continue
                         entry = Entry(
                             self.chain, line_number, action, protocol, option, source, destination, extensions
@@ -160,7 +160,7 @@ class Chain:
                 if out:
                     for line in out.decode("ascii").split("\n"):
                         # Unlike ipv4 iptables, the 'option' thing is blank here, so omit it
-                        m = re.match(r"^(\d+)\s+([A-Z]+)\s+(all|tcp|udp)\s+([0-9a-f.:/]+)\s+([0-9a-f.:/]+)\s*(.*?)$", line)
+                        m = re.match(r"^(\d+)\s+([-0-9a-zA-Z]+)\s+(all|tcp|udp)\s+([0-9a-f.:/]+)\s+([0-9a-f.:/]+)\s*(.*?)$", line)
                         if m:
                             line_number = m.group(1)
                             action = m.group(2)
@@ -168,7 +168,7 @@ class Chain:
                             source = m.group(4)
                             destination = m.group(5)
                             extensions = m.group(6)
-                            if action and action != "DROP":   # We only want drops
+                            if action and action not in ["DROP", "REJECT"]:   # We only want drops and rejects
                                 continue
                             entry = Entry(
                                 self.chain, line_number, action, protocol, None, source, destination, extensions
