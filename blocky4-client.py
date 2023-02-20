@@ -155,12 +155,13 @@ async def loop(config):
                 assert rv.status == 200, f"API host responded with bad status: {rv.status}"
                 js = await rv.json()
                 await process_changes(config, chains, allow=js["allow"], block=js["block"])
+                break
             except Exception as e:
                 print("[%u] Connection failed (%s: %s), reconnecting in 30 seconds" % (time.time(), type(e), e))
                 await asyncio.sleep(30)
 
     # Attach to pubsub and listen for new blocks/allows
-    async for payload in asfpy.pubsub.listen(self.config["pubsub_host"]):
+    async for payload in asfpy.pubsub.listen(config["pubsub_host"]):
         if "blocky" in payload.get("pubsub_topics", []):
             if "block" in payload:
                 await process_changes(config, chains, block=[payload["block"]])
