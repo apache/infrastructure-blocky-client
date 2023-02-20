@@ -168,7 +168,7 @@ async def loop(config):
         # Time to re-upload our own current list of bans?
         if last_upload + config.get("upload_interval", 300) < time.time():
             await upload_iptables(config, chains)
-                last_upload = time.time()
+            last_upload = time.time()
 
 
 
