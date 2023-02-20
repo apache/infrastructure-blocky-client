@@ -185,8 +185,8 @@ def main():
         asyncio.run(loop(config))
     # Python<=3.6 fallback
     else:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(loop(config))
+        current_loop = asyncio.get_event_loop()
+        current_loop.run_until_complete(loop(config))
 
 if __name__ == "__main__":
     main()
