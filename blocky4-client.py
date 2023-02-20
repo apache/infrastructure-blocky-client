@@ -24,6 +24,7 @@ import asfpy.syslog
 import asfpy.whoami
 import asfpy.pubsub
 import aiohttp
+import sys
 
 MAX_BLOCK_SIZE_IPV4 = (2 ** 16)  # Max a /16 block in IPv4 space (32 - 16 == /16)
 MAX_BLOCK_SIZE_IPV6 = (2 ** 72)  # Max a /56 block in IPv6 space (128 - 72 == /56)
@@ -178,9 +179,14 @@ def main():
     if "whoami" not in config:
         config["whoami"] = asfpy.whoami.whoami()
     config["api_host"] = config["api_host"].rstrip("/")
-    # Start async loop
-    asyncio.get_event_loop().run_until_complete(loop(config))
-
+    
+    # Default modern behavior (Python>=3.7)
+    if sys.version_info.minor >= 7:
+        asyncio.run(loop(config))
+    # Python<=3.6 fallback
+    else:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(loop(config))
 
 if __name__ == "__main__":
     main()
