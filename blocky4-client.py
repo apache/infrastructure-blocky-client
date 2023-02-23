@@ -22,8 +22,9 @@ import asyncio
 import yaml
 import asfpy.syslog
 import asfpy.whoami
+import asfpy.pubsub
 import aiohttp
-import json
+import sys
 
 MAX_BLOCK_SIZE_IPV4 = (2 ** 16)  # Max a /16 block in IPv4 space (32 - 16 == /16)
 MAX_BLOCK_SIZE_IPV6 = (2 ** 72)  # Max a /56 block in IPv6 space (128 - 72 == /56)
@@ -147,37 +148,30 @@ async def loop(config):
     last_upload = 0
 
     while True:
+        # Grab initial list of blocks/allows
         async with aiohttp.ClientSession() as session:
             try:
                 rv = await session.get(f"{uri}/all")
                 assert rv.status == 200, f"API host responded with bad status: {rv.status}"
                 js = await rv.json()
                 await process_changes(config, chains, allow=js["allow"], block=js["block"])
-
-                # Attach to pubsub and listen for new blocks/allows
-                async with session.get(config["pubsub_host"], timeout=None) as pubsub_conn:
-                    buffer = b""
-                    async for data, end_of_http_chunk in pubsub_conn.content.iter_chunks():
-                        buffer += data
-                        if end_of_http_chunk:
-                            chunk = buffer.decode("utf-8").strip()
-                            buffer = b""
-                            if chunk:
-                                try:
-                                    payload = json.loads(chunk)
-                                    if "blocky" in payload.get("pubsub_topics", []):
-                                        if "block" in payload:
-                                            await process_changes(config, chains, block=[payload["block"]])
-                                        elif "allow" in payload:
-                                            await process_changes(config, chains, allow=[payload["allow"]])
-                                except json.JSONDecodeError as e:
-                                    print(e)
-                        if last_upload + config.get("upload_interval", 300) < time.time():
-                            await upload_iptables(config, chains)
-                            last_upload = time.time()
+                break
             except Exception as e:
                 print("[%u] Connection failed (%s: %s), reconnecting in 30 seconds" % (time.time(), type(e), e))
                 await asyncio.sleep(30)
+
+    # Attach to pubsub and listen for new blocks/allows
+    async for payload in asfpy.pubsub.listen(config["pubsub_host"]):
+        if "blocky" in payload.get("pubsub_topics", []):
+            if "block" in payload:
+                await process_changes(config, chains, block=[payload["block"]])
+            elif "allow" in payload:
+                await process_changes(config, chains, allow=[payload["allow"]])
+        # Time to re-upload our own current list of bans?
+        if last_upload + config.get("upload_interval", 300) < time.time():
+            await upload_iptables(config, chains)
+            last_upload = time.time()
+
 
 
 def main():
@@ -186,9 +180,14 @@ def main():
     if "whoami" not in config:
         config["whoami"] = asfpy.whoami.whoami()
     config["api_host"] = config["api_host"].rstrip("/")
-    # Start async loop
-    asyncio.get_event_loop().run_until_complete(loop(config))
-
+    
+    # Default modern behavior (Python>=3.7)
+    if sys.version_info.minor >= 7:
+        asyncio.run(loop(config))
+    # Python<=3.6 fallback
+    else:
+        current_loop = asyncio.get_event_loop()
+        current_loop.run_until_complete(loop(config))
 
 if __name__ == "__main__":
     main()
