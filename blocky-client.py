@@ -396,7 +396,7 @@ def main():
         if epoch < last_boot:
             print("Computer was rebooted since last check, resetting cache")
             epoch = 0
-    except:
+    except Exception: # TODO: narrow further to expected Exceptions
         pass
     # Set new epoch
     with open("epoch.dat", "w") as f:
