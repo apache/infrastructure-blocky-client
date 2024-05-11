@@ -41,7 +41,7 @@ async def upload_iptables(config, chains):
         await chain.refresh()
         for rule in chain.items:
             rules_as_dict.append(rule.to_dict())
-    #  print("Uploading iptables list (%u entries) to Blocky server" % len(rules_as_dict))
+    #  print("Uploading iptables list (%d entries) to Blocky server" % len(rules_as_dict))
     try:
         js = {"hostname": config["whoami"], "iptables": rules_as_dict}
         timeout = aiohttp.ClientTimeout(total=15)
@@ -71,7 +71,7 @@ async def process_changes(config, chains, allow=[], block=[]):
     """Process allows and blocks"""
     allow_blocks = []
     if allow or block:
-        print("Processing upstream change-set (%u entries)" % (len(allow) + len(block)))
+        print("Processing upstream change-set (%d entries)" % (len(allow) + len(block)))
     processed = 0
     # First process any new allows
     if allow and chains:  # If we have an INPUT default chain, refresh before unblock.
@@ -103,7 +103,7 @@ async def process_changes(config, chains, allow=[], block=[]):
         if ip:
             processed += 1
             if (processed % 500) == 0:
-                print("Processed %u entries..." % processed)
+                print("Processed %d entries..." % processed)
             # Only apply blocks if host is * or our specific name
             if entry.get('host', '*') not in [config['whoami'], '*']:
                 continue
@@ -114,7 +114,7 @@ async def process_changes(config, chains, allow=[], block=[]):
                 if (as_block.version == 4 and as_block.size > MAX_BLOCK_SIZE_IPV4) or (
                     as_block.version == 6 and as_block.size > MAX_BLOCK_SIZE_IPV6
                 ):
-                    print("%s was requested banned but the net block is too large (%u IPs)" % (as_block, as_block.size))
+                    print("%s was requested banned but the net block is too large (%d IPs)" % (as_block, as_block.size))
                     continue
             else:
                 if ":" in ip:
@@ -157,7 +157,7 @@ async def loop(config):
                 await process_changes(config, chains, allow=js["allow"], block=js["block"])
                 break
             except Exception as e:
-                print("[%u] Connection failed (%s: %s), reconnecting in 30 seconds" % (time.time(), type(e), e))
+                print("[%d] Connection failed (%s: %s), reconnecting in 30 seconds" % (time.time(), type(e), e))
                 await asyncio.sleep(30)
 
     # Attach to pubsub and listen for new blocks/allows
