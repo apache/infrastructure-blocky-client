@@ -95,7 +95,7 @@ async def process_changes(whitelist, banlist, websocket):
     whiteblocks = []
     if not (whitelist or banlist):
         return
-    print("Processing Blocky change-set (%u entries)" % (len(whitelist) + len(banlist)))
+    print("Processing Blocky change-set (%d entries)" % (len(whitelist) + len(banlist)))
     processed = 0
     for ip in whitelist:
         if ip:
@@ -129,14 +129,14 @@ async def process_changes(whitelist, banlist, websocket):
         if ip:
             processed += 1
             if (processed % 500) == 0:
-                print("Processed %u entries..." % processed)
+                print("Processed %d entries..." % processed)
             banit = True
             block = None
             if '/' in ip:
                 block = netaddr.IPNetwork(ip)
                 # We never ban larger than a /8 on ipv4 and /56 on ipv6
                 if (block.version == 4 and block.size > (2 ** 24)) or (block.version == 6 and block.size > (2 ^ 72)):
-                    print("%s was requested banned but the net block is too large (%u IPs)" % (block, block.size))
+                    print("%s was requested banned but the net block is too large (%d IPs)" % (block, block.size))
                     continue
             else:
                 if ':' in ip:
@@ -374,10 +374,10 @@ async def hello(epoch):
                             elif cmd == 'GOOD':
                                 if target == CONFIG['client']['hostname'] or target == '*':
                                     whitelist.append(ip)
-            print("[%u] Server disconnected, reconnecting in 30 seconds" % time.time())
+            print("[%d] Server disconnected, reconnecting in 30 seconds" % time.time())
             time.sleep(30)
         except Exception as e:
-            print("[%u] Connection failed (%s), reconnecting in 30 seconds" % (time.time(), e))
+            print("[%d] Connection failed (%s), reconnecting in 30 seconds" % (time.time(), e))
             time.sleep(30)
 
 
@@ -400,7 +400,7 @@ def main():
         pass
     # Set new epoch
     with open("epoch.dat", "w") as f:
-        f.write("%u" % time.time())
+        f.write("%d" % time.time())
         f.close()
 
     # Load YAML
