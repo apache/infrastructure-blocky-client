@@ -26,7 +26,7 @@ import asfpy.pubsub
 import aiohttp
 import sys
 
-MAX_BLOCK_SIZE_IPV4 = (2 ** 16)  # Max a /16 block in IPv4 space (32 - 16 == /16)
+MAX_BLOCK_SIZE_IPV4 = (2 ** 20)  # Max a /12 block in IPv4 space (32 - 20 == /12)
 MAX_BLOCK_SIZE_IPV6 = (2 ** 72)  # Max a /56 block in IPv6 space (128 - 72 == /56)
 
 
