@@ -112,7 +112,7 @@ class Chain:
             if out:
                 for line in out.decode("ascii").split("\n"):
                     m = re.match(
-                        r"^(\d+)\s+([-0-9a-zA-Z]+)\s+(all|tcp|udp)\s+(\S+)\s+([0-9a-f.:/]+)\s+([0-9a-f.:/]+)\s*(.*?)$", line
+                        r"^(\d+)\s+([-0-9a-zA-Z]+)\s+(all|tcp|udp|\d)\s+(\S+)\s+([0-9a-f.:/]+)\s+([0-9a-f.:/]+)\s*(.*?)$", line
                     )
                     if m:
                         line_number = m.group(1)
